@@ -3,8 +3,8 @@ scipy
 librosa 
 noisereduce
 pydub
-silero_vad
-python-vlc
 configparser
 pyaudio
-torch
+playsound3
+onnxruntime
+systemd-watchdog

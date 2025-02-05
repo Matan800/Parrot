@@ -4,19 +4,17 @@ import noisereduce
 import numpy as np
 import os
 import parrot_utils
-from playsound3 import playsound
 import pydub
 import pydub.effects
 import random
 import scipy.signal as sig
-from silero_onnx_vad import SileroOnnxVAD
+import silero_vad
 import time
+import torch
 
 class Parrot:
-    """class implementing the Parrot
-    """    
     # constants
-    _AUDIO_BUFFER_SEC = 15
+    _AUDIO_BUFFER_SEC = 20
     _AUDIO_BIT_SEC = 0.5
     _SPPECH_THRESHOLD = 0.5
     _NOISE_THRESHOLD = 0.2
@@ -30,9 +28,9 @@ class Parrot:
     _MAX_BORED = 3*60
     _PLAY_PROB = 0.25
 
-    def __init__(self,in_stream,out_stream):
-        folder = os.path.dirname(os.path.abspath(__file__))
-        self.model = SileroOnnxVAD(os.path.join(folder,"silero_vad.onnx"), force_cpu=True)
+    def __init__(self,VLCplayer,in_stream,out_stream):
+        self.model = silero_vad.load_silero_vad()
+        self.player = VLCplayer
         self.in_stream = in_stream
         self.out_stream = out_stream
         self._SAMPLE_RATE = self.in_stream._rate # hack
@@ -49,8 +47,8 @@ class Parrot:
         self.noise_bit = []
 
     def init_file_lists(self):
-        self.whistels = glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)),'Media','Whistles','*.mp3'))
-        self.sentences = glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)),'Media','Sentences','*.mp3'))
+        self.whistels = glob.glob(os.path.join('Media','Whistles','*.mp3'))
+        self.sentences = glob.glob(os.path.join('Media','Sentences','*.mp3'))
 
     def get_parrot_timeout(self):
         return random.randint(self._MIN_BORED,self._MAX_BORED)
@@ -68,8 +66,7 @@ class Parrot:
         voiced_confidences = []
         np_data = np_data.reshape((-1,self._CHUNK))
         for row in np_data:
-            p = self.model(row, self._SAMPLE_RATE)
-            voiced_confidences.append(float(np.squeeze(p)))
+            voiced_confidences.append(self.model(torch.from_numpy(row), self._SAMPLE_RATE).item())
         # not all silence is noise
         speech_parts = [True for x in voiced_confidences if x > self._SPPECH_THRESHOLD]
         if len(speech_parts) > 0:
@@ -86,7 +83,11 @@ class Parrot:
         if len(self.whistels) == 0:
             return
         if random.uniform(0,1) < self._PLAY_PROB or force_play:
-            playsound(random.choice(self.whistels))
+            self.player.set_media(self.player.get_instance().media_new(random.choice(self.whistels)))
+            self.player.play()
+            time.sleep(0.05)
+            while self.player.is_playing():
+                time.sleep(0.05)
 
     def play_random_sentence(self):
         time.sleep(0.1)
@@ -94,8 +95,11 @@ class Parrot:
             if random.uniform(0,1) > 0.5:
                 if len(self.sentences) == 0:
                     return  
-                playsound(random.choice(self.sentences))  
-
+                self.player.set_media(self.player.get_instance().media_new(random.choice(self.sentences)))
+                self.player.play()
+                time.sleep(0.05)
+                while self.player.is_playing():
+                    time.sleep(0.05)
             else:
                 self.play_random_whistle(True)
                 self.play_random_whistle(True)
@@ -140,7 +144,6 @@ class Parrot:
         count = 0
         while 1:
             data = []
-            # collect a consecutive sentence
             for _ in range(self.audio_bits_num):
                 bit_data = self.get_audio_bit()
                 np_data = np.array(bit_data).reshape(-1)
@@ -157,7 +160,6 @@ class Parrot:
                 last_conversation = time.time()
 
             if len(data) > 0: 
-                # playback sentence
                 # stopping and restarting mic, half duplex operation
                 self.in_stream.stop_stream()
                 signal = np.array(data).reshape(-1)

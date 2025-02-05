@@ -1,5 +1,17 @@
-import parrot
+from parrot import Parrot
 import pyaudio
+import systemd_watchdog
+import signal 
+ 
+Sentry = True
+
+# Create a Signal Handler for Signals.SIGINT / Signals.SIGTERM
+def SignalHandler_Terminate(SignalNumber,Frame):
+   global Sentry 
+   Sentry = False
+   
+signal.signal(signal.SIGINT,SignalHandler_Terminate) #regsiter signal with handler
+signal.signal(signal.SIGTERM,SignalHandler_Terminate) #regsiter signal with handler
 
 # pyaudio setup
 _CHANNELS = 1
@@ -7,7 +19,13 @@ _SAMPLE_RATE = 16000
 _CHUNK = 512
 
 def main():
+    global Sentry
     #init
+    wd = systemd_watchdog.WatchDog()
+    if not wd.is_enabled:
+        # we expect a systemd with watchdog enabled
+        raise Exception("Watchdog not enabled") 
+    print("Starting Parrot...")
     audio = pyaudio.PyAudio()
     in_stream = audio.open(format=pyaudio.paInt16,
                                 channels=_CHANNELS,
@@ -21,10 +39,16 @@ def main():
                                 output=True,
                                 frames_per_buffer=_CHUNK,
                                 )
-    parrot_obj = parrot.Parrot(in_stream,out_stream)
+    parrot_obj = Parrot(in_stream,out_stream)
+    wd.ready()
+    print("Init complete.")
+    wd.notify()
     # run
-    parrot_obj.infinite_loop()
+    while Sentry:
+        parrot_obj.infinite_loop(0) # run once
+        wd.ping()
     # cleanup
+    print("Shutting down...")
     in_stream.stop_stream()
     in_stream.close()
     out_stream.stop_stream()

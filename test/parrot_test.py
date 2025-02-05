@@ -1,7 +1,7 @@
 import glob
 import numpy as np
 import os
-import parrot_utils
+import parrot.parrot_utils
 import pyaudio
 import scipy.signal as sig
 import wave
@@ -61,7 +61,7 @@ class MockAudio():
                 audio = wf.readframes(wf.getnframes())
                 if width == 2:
                     audio_int16 = np.frombuffer(audio, np.int16)
-                    audio_float32 = parrot_utils.int2float(audio_int16)
+                    audio_float32 = parrot.parrot_utils.int2float(audio_int16)
                 else:
                     raise NotImplementedError()
                 if channel_num > channels:
