@@ -1,0 +1,26 @@
+[project]
+name = "parrot"
+version = "1.0.0"
+authors = [
+  { name="Matan Nurick", email="matan.nurick@gmail.com" },
+]
+description = "A Silly Parrot"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    'numpy',
+    'scipy',
+    'librosa', 
+    'noisereduce',
+    'pydub',
+    'silero_vad',
+    'python-vlc',
+    'configparser',
+    'pyaudio',
+    'torch',
+]
+[tool.setuptools.packages.find]
+include = ["parrot*"]
