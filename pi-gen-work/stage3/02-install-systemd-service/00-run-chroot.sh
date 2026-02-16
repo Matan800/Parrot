@@ -1,3 +1,4 @@
+#!/bin/bash
 CODE_DIR="/home/${FIRST_USER_NAME}/python"
 SERVICE_FILE="/etc/systemd/system/parrot-systemd.service"
 cat <<EOF >$SERVICE_FILE

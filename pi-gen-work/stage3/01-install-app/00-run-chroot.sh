@@ -1,3 +1,4 @@
+#!/bin/bash
 PYTHON_DIR="/home/${FIRST_USER_NAME}/python"
 python3 -c "import platform;print(platform.machine());"
 python3 -m venv "${PYTHON_DIR}/venv"

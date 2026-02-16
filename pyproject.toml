@@ -1,6 +1,10 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "parrot"
-version = "1.0.0"
+version = "1.0.1"
 authors = [
   { name="Matan Nurick", email="matan.nurick@gmail.com" },
 ]
@@ -10,17 +14,32 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE", "THIRD-PARTY-NOTICES"]
 dependencies = [
     'numpy',
     'scipy',
-    'librosa', 
+    'librosa ',
     'noisereduce',
     'pydub',
-    'silero_vad',
-    'python-vlc',
     'configparser',
     'pyaudio',
-    'torch',
+    'playsound3',
+    'onnxruntime',
+    'systemd-watchdog',
 ]
+
 [tool.setuptools.packages.find]
 include = ["parrot*"]
+exclude = ["test*","pi-gen-work"]
+namespaces = true
+
+[tool.setuptools.package-data]
+"*" = [
+    "*.py",
+    "*.onnx",
+    "*.mp3",
+    "LICENSE",
+    "THIRD-PARTY-NOTICES",
+    ]
