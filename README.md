@@ -2,7 +2,7 @@
 # parrot
 
 A Python app that listens to your microphone, detects when you speak, and plays back a  **distorted** copy. **Whistles** and **parrot sounds** are added randomly. Built for fun, 
-as a proposed mechanism for the [BluBa Fairytale Garden](https://www.blueba.de/en/fairytale-garden-alt.html) Parrot .
+as a proposed mechanism for the [BluBa Fairytale Garden](https://www.blueba.de/en/fairytale-garden-alt.html) Parrot.
 
 ---
 
@@ -12,6 +12,7 @@ as a proposed mechanism for the [BluBa Fairytale Garden](https://www.blueba.de/e
 - **Real-time(ish) effects**: pitch/rate shifting to mimic a parrot
 - **Parrot flair**: random **whistles** and **squawks** added at sentence ends
 - **Headless mode** & optional **systemd watchdog** heartbeat (Linux) with Raspberry Pi image generation
+- **GPIO 26** is on when listening, off when speaking, can be used to drive the parrot's eye light
 
 > Note: This is a local/offline app. No cloud calls are required.
 
@@ -33,8 +34,10 @@ Core Python packages used by **parrot**:
 
 Models/Assets:
 - **Silero VAD** ONNX model (`silero_vad.onnx`)
-- **.mp3** assets for whistles / parrot sounds
 ---
+
+Please add parrot sounds as mp3 files under parrot/Media.
+I forgot where I got my files, so I cannot publish them due to licensing issues...
 
 ## Quick Start
 

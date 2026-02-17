@@ -12,6 +12,11 @@ import scipy.signal as sig
 from silero_onnx_vad import SileroOnnxVAD
 import time
 
+if parrot_utils.is_raspberry_pi():
+    from gpiozero import LED
+else:
+    from parrot_utils import MockLED as LED
+
 class Parrot:
     """class implementing the Parrot
     """    
@@ -29,6 +34,7 @@ class Parrot:
     _MIN_BORED = 60
     _MAX_BORED = 3*60
     _PLAY_PROB = 0.25
+    _GPIO = 26
 
     def __init__(self,in_stream,out_stream):
         folder = os.path.dirname(os.path.abspath(__file__))
@@ -47,6 +53,8 @@ class Parrot:
                                                           order=self._FILTER_ORDER)
         self.init_file_lists()
         self.noise_bit = []
+        self.eye = LED(self._GPIO)
+        self.eye.on()
 
     def init_file_lists(self):
         self.whistels = glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)),'Media','Whistles','*.mp3'))
@@ -159,6 +167,8 @@ class Parrot:
             if len(data) > 0: 
                 # playback sentence
                 # stopping and restarting mic, half duplex operation
+                # eye off
+                self.eye.off()
                 self.in_stream.stop_stream()
                 signal = np.array(data).reshape(-1)
                 signal = self.precondition_signal(signal)
@@ -167,6 +177,7 @@ class Parrot:
                 self.out_stream.write(signal)
                 self.play_random_whistle()
                 self.in_stream.start_stream()
+                self.eye.on()
             
             # for self test
             if (count_limit > 0): 

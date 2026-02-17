@@ -28,3 +28,18 @@ def butter_bandpass(freq_low, freq_high, fs, order=5):
     b, a = sig.butter(order, [normal_low,normal_high], btype='bandpass', analog=False)
     return b, a
 
+def is_raspberry_pi():
+    try:
+        with open("/sys/firmware/devicetree/base/model", "r") as f:
+            model = f.read().lower()
+        return "raspberry pi" in model
+    except FileNotFoundError:
+        return False
+    
+class MockLED:
+    def __init__(self, GPIO: int):
+        pass
+    def on(self):
+        pass
+    def off(self):
+        pass
