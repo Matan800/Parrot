@@ -31,6 +31,7 @@ Core Python packages used by **parrot**:
 - `playsound3`
 - `onnxruntime`
 - `systemd-watchdog` *(optional for raspberri-pi deployment; Linux-only)*
+- `gpiozero`
 
 Models/Assets:
 - **Silero VAD** ONNX model (`silero_vad.onnx`)

@@ -28,6 +28,7 @@ dependencies = [
     'playsound3',
     'onnxruntime',
     'systemd-watchdog',
+    'gpiozero',
 ]
 
 [tool.setuptools.packages.find]

@@ -35,6 +35,7 @@ class Parrot:
     _MAX_BORED = 3*60
     _PLAY_PROB = 0.25
     _GPIO = 26
+    _SILERO_CHUNK = 512
 
     def __init__(self,in_stream,out_stream):
         folder = os.path.dirname(os.path.abspath(__file__))
@@ -49,13 +50,20 @@ class Parrot:
         self.audio_bits_num = round(self._AUDIO_BUFFER_SEC / self._AUDIO_BIT_SEC)
         # self.filter_coeffs = parrot_utils.butter_bandpass(self._FILTER_CUTOFF_LOW, self._FILTER_CUTOFF_HIGH, 
         #                                     self._SAMPLE_RATE, order=self._FILTER_ORDER)
-        self.filter_coeffs = parrot_utils.butter_highpass(self._FILTER_CUTOFF_LOW, self._SAMPLE_RATE, 
-                                                          order=self._FILTER_ORDER)
+        # self.filter_coeffs = parrot_utils.butter_highpass(self._FILTER_CUTOFF_LOW, self._SAMPLE_RATE, 
+        #                                                   order=self._FILTER_ORDER)
         self.init_file_lists()
         self.noise_bit = []
         self.eye = LED(self._GPIO)
         self.eye.on()
+        self.init_functions()
 
+    # init functions who's first run takes a long time
+    def init_functions(self):
+        signal = np.zeros(shape=(self._CHUNK),dtype=np.float32)
+        self.filter_noise(signal)
+        self.condition_signal(signal)
+        
     def init_file_lists(self):
         self.whistels = glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)),'Media','Whistles','*.mp3'))
         self.sentences = glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)),'Media','Sentences','*.mp3'))
@@ -74,7 +82,7 @@ class Parrot:
             
     def analyze_speech(self,np_data):
         voiced_confidences = []
-        np_data = np_data.reshape((-1,self._CHUNK))
+        np_data = np_data.reshape((-1,self._SILERO_CHUNK))
         for row in np_data:
             p = self.model(row, self._SAMPLE_RATE)
             voiced_confidences.append(float(np.squeeze(p)))
@@ -116,17 +124,17 @@ class Parrot:
     def filter_noise(self,signal):
         if len(self.noise_bit) > 0:
             signal = noisereduce.reduce_noise(y=signal,sr=self._SAMPLE_RATE,
-                                                n_fft=self._CHUNK,stationary=True,
+                                                n_fft=self._SILERO_CHUNK,stationary=True,
                                                 y_noise=self.noise_bit)
         else:
             signal = noisereduce.reduce_noise(y=signal,sr=self._SAMPLE_RATE,
-                                                n_fft=self._CHUNK,stationary=True)
+                                                n_fft=self._SILERO_CHUNK,stationary=True)
         signal = librosa.util.normalize(signal)
         return signal
 
     def condition_signal(self,signal):
         # compression (boost weak signals)
-        signal = pydub.AudioSegment((10000*signal).astype(np.int32).tobytes(), 
+        signal = pydub.AudioSegment((32768*signal).astype(np.int32).tobytes(), 
                                     sample_width=np.dtype(np.int32).itemsize,
                                     frame_rate=self._SAMPLE_RATE, channels=self._CHANNELS)
         signal = pydub.effects.normalize(signal)
@@ -139,7 +147,7 @@ class Parrot:
                                              n_steps=self._PITCH_SHIFT)
         signal = librosa.effects.time_stretch(signal, rate=self._RATE_SHIFT)
         signal = librosa.util.normalize(signal)
-        signal = signal.astype(np.float32).tobytes()
+        signal = (signal*32768).astype(np.int16).tobytes()
         return signal
     
     def infinite_loop(self,count_limit = -1):
@@ -148,6 +156,7 @@ class Parrot:
         count = 0
         while 1:
             data = []
+            self.in_stream.start_stream()
             # collect a consecutive sentence
             for _ in range(self.audio_bits_num):
                 bit_data = self.get_audio_bit()
@@ -156,6 +165,7 @@ class Parrot:
                 if parrot_utils.AudioType.NOISE in flag:
                     self.noise_bit = np_data
                 if parrot_utils.AudioType.SILENT in flag: 
+                    self.in_stream.stop_stream()
                     if time.time() - last_conversation > bored_parrot_timeout_sec:
                         last_conversation = time.time()
                         bored_parrot_timeout_sec = self.get_parrot_timeout()
@@ -171,7 +181,7 @@ class Parrot:
                 self.eye.off()
                 self.in_stream.stop_stream()
                 signal = np.array(data).reshape(-1)
-                signal = self.precondition_signal(signal)
+                # signal = self.precondition_signal(signal)
                 signal = self.filter_noise(signal)
                 signal = self.condition_signal(signal)
                 self.out_stream.write(signal)
@@ -179,8 +189,8 @@ class Parrot:
                 self.in_stream.start_stream()
                 self.eye.on()
             
-            # for self test
+            # for self test and watchdog
             if (count_limit > 0): 
                 count += 1
-                if (count > count_limit):
+                if (count >= count_limit):
                     break

@@ -16,7 +16,7 @@ signal.signal(signal.SIGTERM,SignalHandler_Terminate) #regsiter signal with hand
 # pyaudio setup
 _CHANNELS = 1
 _SAMPLE_RATE = 16000
-_CHUNK = 512
+_CHUNK = 8192
 
 def main():
     global Sentry
@@ -32,8 +32,9 @@ def main():
                                 rate=_SAMPLE_RATE,
                                 input=True,
                                 frames_per_buffer=_CHUNK,
+                                start=False,
                                 )
-    out_stream = audio.open(format=pyaudio.paFloat32,
+    out_stream = audio.open(format=pyaudio.paInt16,
                                 channels=_CHANNELS,
                                 rate=_SAMPLE_RATE,
                                 output=True,
@@ -45,8 +46,8 @@ def main():
     wd.notify()
     # run
     while Sentry:
-        parrot_obj.infinite_loop(0) # run once
-        wd.ping()
+        parrot_obj.infinite_loop(1) # run once
+        wd.notify()
     # cleanup
     print("Shutting down...")
     in_stream.stop_stream()

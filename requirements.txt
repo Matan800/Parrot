@@ -8,3 +8,4 @@ pyaudio
 playsound3
 onnxruntime
 systemd-watchdog
+gpiozero

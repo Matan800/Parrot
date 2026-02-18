@@ -2,7 +2,7 @@
 CODE_DIR="/home/${FIRST_USER_NAME}/python"
 SERVICE_FILE="/etc/systemd/system/parrot-systemd.service"
 cat <<EOF >$SERVICE_FILE
-# Parrot systemd-watchdog service file"
+# Parrot systemd-watchdog service file
 [Unit]
 Description=Parrot service
 StartLimitBurst=5
@@ -17,7 +17,7 @@ KillSignal=SIGINT
 Restart=on-failure
 RestartSec=10
 Type=notify
-WatchdogSec=35
+WatchdogSec=50
 
 [Install]
 WantedBy=multi-user.target
