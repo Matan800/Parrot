@@ -25,7 +25,7 @@ Core Python packages used by **parrot**:
 - `scipy`
 - `librosa`
 - `noisereduce`
-- `pydub`
+- `audiocomplib`
 - `configparser`
 - `pyaudio`
 - `playsound3`
@@ -82,6 +82,7 @@ cd pi-gen
 source build.sh # Native Raspberri Pi
 source build-docker.sh # Linux with docker and QEMU
 ```
+Note the power reduction steps in pi-gen-work\stage3\03-reduce-power\00-run.sh
 
 ### Docker Setup (Linux, optional)
 ```bash
@@ -124,5 +125,5 @@ Audio never leaves your machine. Grant mic permissions to the Python interpreter
 
 ## Acknowledgements
 - **Silero VAD** authors for their lightweight, accurate voice activity detection model.
-- The maintainers of `librosa`, `noisereduce`, `pydub`, and `pyaudio` for excellent audio tooling.
+- The maintainers of `librosa`, `noisereduce`, `audiocomplib`, and `pyaudio` for excellent audio tooling.
 

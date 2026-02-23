@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "parrot"
-version = "1.0.1"
+version = "1.0.2"
 authors = [
   { name="Matan Nurick", email="matan.nurick@gmail.com" },
 ]
@@ -22,7 +22,7 @@ dependencies = [
     'scipy',
     'librosa ',
     'noisereduce',
-    'pydub',
+    'audiocomplib',
     'configparser',
     'pyaudio',
     'playsound3',

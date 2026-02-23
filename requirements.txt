@@ -2,10 +2,10 @@ numpy
 scipy
 librosa 
 noisereduce
-pydub
 configparser
 pyaudio
 playsound3
 onnxruntime
 systemd-watchdog
 gpiozero
+audiocomplib

@@ -1,3 +1,4 @@
+import audiocomplib
 import glob
 import librosa 
 import noisereduce
@@ -5,8 +6,6 @@ import numpy as np
 import os
 import parrot_utils
 from playsound3 import playsound
-import pydub
-import pydub.effects
 import random
 import scipy.signal as sig
 from silero_onnx_vad import SileroOnnxVAD
@@ -54,6 +53,13 @@ class Parrot:
         #                                                   order=self._FILTER_ORDER)
         self.init_file_lists()
         self.noise_bit = []
+        self.compressor = audiocomplib.AudioCompressor(
+            threshold=-30.0,
+            ratio=6.0,
+            attack_time_ms=5.0,
+            release_time_ms=20.0,
+            variable_release=True
+        )
         self.eye = LED(self._GPIO)
         self.eye.on()
         self.init_functions()
@@ -116,6 +122,7 @@ class Parrot:
                 self.play_random_whistle(True)
                 self.play_random_whistle(True)
 
+    # no longer used
     def precondition_signal(self,signal):
         signal = sig.filtfilt(self.filter_coeffs[0], self.filter_coeffs[1], signal)
         signal = librosa.util.normalize(signal)
@@ -133,15 +140,9 @@ class Parrot:
         return signal
 
     def condition_signal(self,signal):
-        # compression (boost weak signals)
-        signal = pydub.AudioSegment((32768*signal).astype(np.int32).tobytes(), 
-                                    sample_width=np.dtype(np.int32).itemsize,
-                                    frame_rate=self._SAMPLE_RATE, channels=self._CHANNELS)
-        signal = pydub.effects.normalize(signal)
-        signal = pydub.effects.compress_dynamic_range(signal,threshold=-30,ratio=6,release=20)
-        tmp = signal.raw_data
-        signal = np.frombuffer(tmp,dtype=np.int32).astype(np.float32)
         signal = librosa.util.normalize(signal)
+        signal = self.compressor.process(signal.reshape(-1,1), sample_rate=self._SAMPLE_RATE)
+        signal = librosa.util.normalize(signal[:,0])
         # effects
         signal = librosa.effects.pitch_shift(signal,sr=self._SAMPLE_RATE,
                                              n_steps=self._PITCH_SHIFT)

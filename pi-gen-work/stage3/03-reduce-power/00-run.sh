@@ -125,8 +125,8 @@ ensure_line "$CONFIG_TXT" "dtparam=act_led_activelow=on"
 # Underclock/undervolt (adjust if needed)
 ensure_kv "$CONFIG_TXT" "arm_freq" "1000"
 ensure_kv "$CONFIG_TXT" "arm_freq_min" "1000"
-# ensure_kv "$CONFIG_TXT" "over_voltage" "-6"
-# ensure_kv "$CONFIG_TXT" "over_voltage_min" "-6"
+ensure_kv "$CONFIG_TXT" "over_voltage" "-6"
+ensure_kv "$CONFIG_TXT" "over_voltage_min" "-6"
 
 # CPU core limiting (remove if workload is high). 2 is minimum to enable ONNX for silero-vad
 # ensure_cmdline_token "$CMDLINE_TXT" "maxcpus=2"
